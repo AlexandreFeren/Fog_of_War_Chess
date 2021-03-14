@@ -10,7 +10,6 @@ This is my project for COS470: Introduction to Artificial Intelligence. The goal
 2. While not strictly required, I would reccomend creating a virtual environment to run the program in. 
     - Instructions for installation can be found [here](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 3. Once you have navigated into the project folder `COS470_Fog_of_War` ensure you have all required libraries by running `pip3 install -r requirements.txt`
-4. Run the program with `python3 main.py`
 
 ### The Game
 #### Rules and Introduction
