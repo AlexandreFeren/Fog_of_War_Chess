@@ -127,6 +127,10 @@ class Board:
         print(self.meta_info)
         #self.meta_info[4] = -1  #reset en passant tracker, needed info is stored in move[3]
         
+        if self.pieces[move[0]] == 6:
+            self.meta_info[(self.to_play - 1)*2] = 0
+            self.meta_info[(self.to_play - 1)*2 + 1] = 0
+
         if move[3] == 0:    # no special work to be done
             self.pieces[move[1]] = self.pieces[move[0]]
             self.colors[move[1]] = self.to_play
@@ -183,13 +187,37 @@ class Board:
             
         elif move[3] == 7:
             # castle short
-            raise NotImplementedError("short castle not implemented")
+            
+            #move king and rook
+            self.pieces[move[0] + 1] = 2
+            self.colors[move[0] + 1] = self.to_play
+            self.pieces[move[0] + 2] = 6
+            self.colors[move[0] + 2] = self.to_play
+            
+            #clear where king and rook were
+            self.pieces[move[0]] = 0
+            self.colors[move[0]] = 0
+            self.pieces[move[0] + 3] = 0
+            self.colors[move[0] + 3] = 0
+            
             ret = move
             self.meta_info[4] = -1 # reset en passant
 
         elif move[3] == 8:
             # castle long
-            raise NotImplementedError("long castle not implemented")
+            
+            #move king and rook
+            self.pieces[move[0] - 1] = 2
+            self.colors[move[0] - 1] = self.to_play
+            self.pieces[move[0] - 2] = 6
+            self.colors[move[0] - 2] = self.to_play
+            
+            #clear where king and rook were
+            self.pieces[move[0]] = 0
+            self.colors[move[0]] = 0
+            self.pieces[move[0] - 4] = 0
+            self.colors[move[0] - 4] = 0
+            
             ret = move
             self.meta_info[4] = -1 # reset en passant
 
@@ -253,6 +281,8 @@ class Board:
         
         algebraic = []
         for i in moves:
+            if len(i) != 4:
+                raise ValueError("Invalid move format: ", i)
             algebraic.append(self._to_algebraic_notation(i))    
         
         return algebraic
@@ -274,13 +304,16 @@ class Board:
         
         # optional specification for disambiguation. for now, just specifying for anything that
         # is not a pawn, and files always because of possible ambiguous pawn captures
+
         if True:
             # if another piece of this type could move to that square from a different file
             ret += chr(move[0]%8 + ord("a"))
+        
         if ret != "":
             # if another piece of this type could move to that square from a different rank
             # and the file doesn't disambiguate it
             ret += str(int(move[0]/8) + 1)
+        
         
         # optional x for takes
         if self.pieces[move[1]] != 0:
@@ -321,7 +354,7 @@ class Board:
                         self.pieces[square + 16] == 0):     # and 2 squares forward is empty
                     moves.append([square, square + 16, 0, 6])
                     #self.meta_info[4] = square%8
-                if (square/8) == 6: # promoting, add all promotion types
+                if int(square/8) == 6: # promoting, add all promotion types
                     for i in range(1, 5):
                         moves.append([square, square + 8, 0, i])
                 else:   # not promoting, already checked that path not obstructed
@@ -364,7 +397,7 @@ class Board:
                         self.pieces[square - 16] == 0):     # and 2 squares forward is empty
                     moves.append([square, square - 16, 0, 6])   
                     #self.meta_info[4] = square%8
-                if (square/8) == 1: # promoting, add all promotion types
+                if int(square/8) == 1: # promoting, add all promotion types
                     for i in range(1, 5):
                         moves.append([square, square - 8, 0, i])
                 else:   # not promoting, already checked that path not obstructed
@@ -398,8 +431,7 @@ class Board:
         returns:
             moves (2D int array): all legal moves for the given rook, in the form noted in get_valid_moves
         """
-        moves = []
-        #moves.append([square, -1, -1, -1])
+        moves = self._get_horizontal_moves(square)
         return moves
         #raise NotImplementedError("rook moves not implemented yet")
         
@@ -411,7 +443,7 @@ class Board:
             moves (2D int array): all legal moves for the given knight, in the form noted in get_valid_moves
         """
         moves = []
-        #moves.append([square, -1, -1, -1])
+        #moves.append([square, square, -1, -1])
         return moves
         #raise NotImplementedError("knight moves not implemented yet")
     
@@ -422,8 +454,7 @@ class Board:
         returns:
             moves (2D int array): all legal moves for the given bishop, in the form noted in get_valid_moves
         """
-        moves = []
-        #moves.append([square, -1, -1, -1])
+        moves = self._get_diagonal_moves(square)
         return moves
         #raise NotImplementedError("bishop moves not implemented yet")
         
@@ -435,7 +466,9 @@ class Board:
             moves (2D int array): all legal moves for the given queen, in the form noted in get_valid_moves
         """
         moves = []
-        #moves.append([square, -1, -1, -1])
+        moves = self._get_horizontal_moves(square)
+        for i in self._get_diagonal_moves(square):
+            moves.append(i)
         return moves
         #raise NotImplementedError("queen moves not implemented yet")
         
@@ -447,14 +480,123 @@ class Board:
             moves (2D int array): all legal moves for the given king, in the form noted in get_valid_moves
         """
         moves = []
-        #moves.append([square, -1, -1, -1])
+        if square%8 != 0:           # not on left of board
+            if self.colors[square - 1] != self.to_play:
+                moves.append([square, square - 1, 0, 0])
+            if int(square/8) != 0 and self.colors[square - 9] != self.to_play:  # not on bottom of board
+                moves.append([square, square - 9, 0, 0])
+            if int(square/8) != 7 and self.colors[square + 7] != self.to_play:  # not on top of board
+                moves.append([square, square + 7, 0, 0])
+        if square%8 != 7:           # not on right of board
+            if self.colors[square + 1] != self.to_play:
+                moves.append([square, square + 1, 0, 0])
+            if int(square/8) != 0 and self.colors[square - 7] != self.to_play:  # not on bottom of board
+                moves.append([square, square - 7, 0, 0])
+            if int(square/8) != 7 and self.colors[square + 9] != self.to_play:  # not on top of board
+                moves.append([square, square + 9, 0, 0])
+        
+        if int(square/8) != 0 and self.colors[square - 8] != self.to_play:  # not on bottom of board
+            moves.append([square, square - 8, 0, 0])
+        if int(square/8) != 7 and self.colors[square + 8] != self.to_play:  # not on top of board
+            moves.append([square, square + 8, 0, 0])
+        
+        # check for castling
+        if self.meta_info[(self.to_play-1)*2] != 0:     #kingside castling
+            if self.pieces[square + 1] == 0 and self.pieces[square + 2] == 0:
+                moves.append([square, square + 2, 0, 7])
+        if self.meta_info[(self.to_play-1)*2 + 1] != 0: #queenside castling
+            if self.pieces[square - 1] == 0 and self.pieces[square - 2] == 0:
+                moves.append([square, square - 2, 0, 8])
+
+        
+        #moves.append([0,0,0,0])
         return moves
-        #raise NotImplementedError("king moves not implemented yet")
+
+    def _get_diagonal_moves(self, square):
+        """
+        
+        """
+        
+        moves = []
+        for i in range(square, 64, 9):  # up right
+            if square%8 - i%8 < 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:    # capture
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+
+        for i in range(square, 57, 7):  # up left
+            if square%8 - i%8 > 0:    
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+                    
+        for i in range(square, -1, -9):  # down left
+            if square%8 - i%8 > 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+                    
+        for i in range(square, -1, -7):  # down right
+            if square%8 - i%8 < 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+        return moves
     
+    def _get_horizontal_moves(self, square):
     
-    
-    
-    
+        moves = []
+        for i in range(square - 8, -1, -8):  #down
+            if square%8 - i%8 == 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+
+        for i in range(square + 8, 64, 8):  #up
+            if square%8 - i%8 == 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+                
+        for i in range(square - 1, -1, -1):  #left
+            if int(square/8) - int(i/8) == 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+                
+        for i in range(square + 1, 64, 1):  #right
+            if int(square/8) - int(i/8) == 0:
+                if self.colors[i] == 0:
+                    moves.append([square, i, 0, 0])
+                    continue
+                elif self.colors[i] != self.to_play:
+                    moves.append([square, i, self.pieces[i], 0])
+                break
+        
+        return moves
+        
+        
     def __str__(self):
         """
         string representation of the board, uses the standard piece letter notations
@@ -479,6 +621,9 @@ class Board:
         Returns:
             fog (int array): all squares that are in the fog of war
         """
+        
+        if side == 0:
+            return [i for i in range(64)]
         if side == None:
             side = self.to_play
             
