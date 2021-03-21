@@ -564,7 +564,7 @@ class Board:
                     moves.append([square, i, self.pieces[i], 0])
                 break
 
-        for i in range(square, 57, 7):  # up left
+        for i in range(square, 64, 7):  # up left
             if square%8 - i%8 > 0:    
                 if self.colors[i] == 0:
                     moves.append([square, i, 0, 0])
