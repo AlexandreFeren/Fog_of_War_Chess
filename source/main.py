@@ -1,7 +1,7 @@
 import ruleset
 import renderer
     
-def play_as_white(win, fog = True):
+def play_as_white(fog = True):
     """
     Play as white against a computer opponent
     Arguments:
@@ -9,12 +9,15 @@ def play_as_white(win, fog = True):
     Returns:
         None
     """
-    render_mode = 1
-    get_move_input(render_mode)
+    if fog:
+        render_mode = 1
+    else:
+        render_mode = 0             # render full board
+    won = get_move_input(render_mode)
     #here the AI move would be done
     raise NotImplementedError("play_as_white not implemented yet")
     
-def play_as_black(win, fog = True):
+def play_as_black(fog = True):
     """
     Play as black against a computer opponent
     Arguments:
@@ -22,12 +25,15 @@ def play_as_black(win, fog = True):
     Returns:
         None
     """
-    render_mode = 2
-    get_move_input(render_mode)   
+    if fog:
+        render_mode = 2
+    else:
+        render_mode = 0             # render full board
+    won = get_move_input(render_mode)   
     #here the AI move would be done
     raise NotImplementedError("play_as_black not implemented yet")
 
-def play_human(win, fog = True):
+def play_human(fog = True):
     """
     Play against a human opponent, with the option of playing unobscured (though this will still allow for normally illegal king moves)
     Arguments
@@ -35,11 +41,13 @@ def play_human(win, fog = True):
     Returns:
         None
     """
-    render_mode = board.to_play # render the side that is to play
+    if fog:
+        render_mode = board.to_play # render the side that is to play
+    else:
+        render_mode = 0             # render full board
+    won = get_move_input(render_mode)   
     
-    won = get_move_input(render_mode)
-    
-    if won != None:
+    if won != None: # check if the game has been won, return if so
         return won
     # black out screen
     if fog:
@@ -47,7 +55,9 @@ def play_human(win, fog = True):
 
 def get_move_input(render_mode):
     """
-    
+    Helper function to avoid duplicate code
+    Arguments:
+        render_mode (int): 1 for white, 2 for black, 0 for unobscured
     """
     move_made = None
     last_squares = [None, None]
@@ -76,6 +86,6 @@ win = renderer.draw_board(board.get_graphics_board())
 moves = board.get_valid_moves()
 
 while 1:
-    won = play_human(win)
+    won = play_human()
     if won != None:
-        break
+        break   # can swap this out for a new game loop later
