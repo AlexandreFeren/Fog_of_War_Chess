@@ -130,7 +130,19 @@ class Board:
         if self.pieces[move[0]] == 6:
             self.meta_info[(self.to_play - 1)*2] = 0
             self.meta_info[(self.to_play - 1)*2 + 1] = 0
+        
+        if self.pieces[move[0]] == 2:
+            if move[0] == 7:            #castle short white disable
+                self.meta_info[0] = 0
+            if move[0] == 0:            #castle long white disable
+                self.meta_info[1] = 0
+            if move[0] == 63:           #castle short black disable
+                self.meta_info[2] = 0
+            if move[0] == 56:           #castle long black disable
+                self.meta_info[3] = 0
+                
 
+        
         if move[3] == 0:    # no special work to be done
             self.pieces[move[1]] = self.pieces[move[0]]
             self.colors[move[1]] = self.to_play
@@ -415,7 +427,7 @@ class Board:
             # can't take to the right if on the H file
             if (square%8 != 7 and 
                     self.pieces[square - 7] != 0):
-                if int(square/8) == 6:          # takes with promotion
+                if int(square/8) == 1:          # takes with promotion
                     for i in range(1, 5):
                         moves.append([square, square - 7, self.pieces[square - 7], i])
                 else:
@@ -443,7 +455,32 @@ class Board:
             moves (2D int array): all legal moves for the given knight, in the form noted in get_valid_moves
         """
         moves = []
-        #moves.append([square, square, -1, -1])
+        
+        if square%8 < 7:
+            if int(square/8) < 6 and self.colors[square + 17] != self.to_play:
+                moves.append([square, square + 17, 0, 0])
+            if int(square/8) > 1 and self.colors[square - 15] != self.to_play:
+                moves.append([square, square - 15, 0, 0])
+                
+            if square%8 < 6:
+                if int(square/8) < 7 and self.colors[square + 10] != self.to_play:
+                    moves.append([square, square + 10, 0, 0])
+                if int(square/8) > 0 and self.colors[square - 6] != self.to_play:
+                    moves.append([square, square - 6 , 0, 0])
+        
+        if square%8 > 0:
+            if int(square/8) < 6 and self.colors[square + 15] != self.to_play:
+                moves.append([square, square + 15, 0, 0])
+            if int(square/8) > 1 and self.colors[square - 17] != self.to_play:
+                moves.append([square, square - 17, 0, 0])
+                
+            if square%8 < 6:
+                if int(square/8) < 7 and self.colors[square + 6] != self.to_play:
+                    moves.append([square, square + 6, 0, 0])
+                if int(square/8) > 0 and self.colors[square - 10] != self.to_play:
+                    moves.append([square, square - 10 , 0, 0])
+            
+
         return moves
         #raise NotImplementedError("knight moves not implemented yet")
     
@@ -642,6 +679,7 @@ class Board:
         
     def get_board(self, side):
         pass
+    
     
     def get_graphics_board(self):
         ret = []

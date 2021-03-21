@@ -136,3 +136,9 @@ def get_promotion(win, board):
                 print("no piece selected")
 
     return piece
+
+def clear_board(win):
+    for item in win.items[:]:
+        item.undraw()
+    draw_grid(win, [i for i in range(64)])
+    pos = win.getMouse()
