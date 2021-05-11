@@ -4,49 +4,52 @@ import Cheating_AI
 import renderer
 import random
 
-def play_as_white():
+def play_as_white(render_mode = 1):
     """
     Play as white against a computer opponent
     Arguments:
-        fog (bool): whether or not fog of war should be displayed
+        render_mode: the mode in which to render the board, can put in 0 for debugging
     Returns:
-        None
+        won (int/None): the win condition, if any. 1 for white wins, 2 for black wins
     """
-    won = human_move(1)
+    won = human_move(render_mode)
     if won != None:
         return won
     won = AI_move()
     if won != None:
         return won
 
-def play_as_black():
+def play_as_black(render_mode = 2):
     """
     Play as black against a computer opponent
     Arguments:
-        fog (bool): whether or not fog of war should be displayed
+        render_mode: the mode in which to render the board, can put in 0 for debugging
     Returns:
-        None
+        won (int/None): the win condition, if any. 1 for white wins, 2 for black wins
     """
     won = AI_move()
     if won != None:
         return won
-    won = human_move(2)
+    won = human_move(render_mode)
     if won != None:
         return won
 
-def play_human():
+def play_human(render_mode = 1):
     """
     Play against a human opponent
     Arguments
         fog (bool): whether or not fog of war should be displayed
     Returns:
-        None
+        won (int/None): the win condition, if any. 1 for white wins, 2 for black wins
     """
     
-    won = human_move()
+    won = human_move(render_mode)
     if won != None:
         return won
-    won = human_move()
+        
+    if render_mode != 0:
+        render_mode = render_mode%2 + 1
+    won = human_move(render_mode)
     if won != None:
         return won
         
@@ -72,7 +75,7 @@ def get_move_input(render_mode = None):
         if move_made == "promote":
             promotion = renderer.get_promotion(win, board)
             move_made = board.validate_move(last_squares, promotion)
-            print("MOVE MADE", move_made)
+            #print("MOVE MADE", move_made)
             renderer.update_board(win, board.get_graphics_board(), board.get_visible_squares(render_mode))
     return move_made
 
@@ -87,9 +90,10 @@ def human_move(render_mode = None):
         won = None
     AI_board.make_move(move)
     board.make_move(move)
-    print(move)
+    #print(move)
     
 def AI_move():
+    #get move from AI
     move = random.choice(board.get_valid_moves())
     if move[2] == 6:
         print("King captured")
@@ -98,7 +102,8 @@ def AI_move():
         won = None
     AI_board.make_move(move)
     board.make_move(move)
-
+    AI_board.evaluate()
+    
 board = game.Board()
 AI_board = Cheating_AI.AIBoard()
 sides = ["", "white", "black"]
@@ -121,6 +126,3 @@ while 1:
     if won != None:
         print(sides[won], "Won the game")
         break
-    #print(board, "\n"*2)
-    #print(AI_board)
-    #print(won)

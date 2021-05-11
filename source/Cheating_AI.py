@@ -25,7 +25,9 @@ class AIBoard(ruleset.GeneralBoard):
         central board evaluation function, takes in the guess about the current board state
         and evaluates what it thinks it is worth.
         """
-        print("test")
+        print(self)
+        print("\n"*2)
+        #print("test")
         
     '''
     def move(self):

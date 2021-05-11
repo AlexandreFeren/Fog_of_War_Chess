@@ -648,7 +648,13 @@ class GeneralBoard():
                 ret += self.piece_names[self.pieces[ind]].lower()
             if ind % 8 == 7:
                 ret += "\n"
-        return ret[:-1]
+        ret = ret.split("\n")
+        ret = ret[::-1]
+        print(ret)
+        temp = ""
+        for i in ret:
+            temp += i + "\n"
+        return temp
 
     def get_visible_squares(self, side = None):
         """

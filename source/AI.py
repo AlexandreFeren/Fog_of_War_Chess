@@ -32,4 +32,3 @@ class AIBoard(ruleset.GeneralBoard):
         central board evaluation function, takes in the guess about the current board state
         and evaluates what it thinks it is worth.
         """
-        pass
