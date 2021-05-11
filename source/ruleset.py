@@ -267,7 +267,7 @@ class GeneralBoard():
             if self.colors[i] == self.to_play:
                 for move in self.piece_move_functions[self.pieces[i]](i):
                     if len(move) != 4:
-                        print("Bad move input")
+                        print("Bad move input:", move)
                     moves.append(move)
                     
         return moves
@@ -450,26 +450,32 @@ class GeneralBoard():
         if square%8 < 7:
             if int(square/8) < 6 and self.colors[square + 17] != self.to_play:
                 moves.append([square, square + 17, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) > 1 and self.colors[square - 15] != self.to_play:
                 moves.append([square, square - 15, 0, 0])
-                
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if square%8 < 6:
                 if int(square/8) < 7 and self.colors[square + 10] != self.to_play:
                     moves.append([square, square + 10, 0, 0])
+                    moves[-1][2] = self.pieces[moves[-1][1]]
                 if int(square/8) > 0 and self.colors[square - 6] != self.to_play:
                     moves.append([square, square - 6 , 0, 0])
-        
+                    moves[-1][2] = self.pieces[moves[-1][1]]
         if square%8 > 0:
             if int(square/8) < 6 and self.colors[square + 15] != self.to_play:
                 moves.append([square, square + 15, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) > 1 and self.colors[square - 17] != self.to_play:
                 moves.append([square, square - 17, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
                 
             if square%8 > 1:
                 if int(square/8) < 7 and self.colors[square + 6] != self.to_play:
                     moves.append([square, square + 6, 0, 0])
+                    moves[-1][2] = self.pieces[moves[-1][1]]
                 if int(square/8) > 0 and self.colors[square - 10] != self.to_play:
                     moves.append([square, square - 10 , 0, 0])
+                    moves[-1][2] = self.pieces[moves[-1][1]]
             
 
         return moves
@@ -511,22 +517,30 @@ class GeneralBoard():
         if square%8 != 0:           # not on left of board
             if self.colors[square - 1] != self.to_play:
                 moves.append([square, square - 1, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) != 0 and self.colors[square - 9] != self.to_play:  # not on bottom of board
                 moves.append([square, square - 9, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) != 7 and self.colors[square + 7] != self.to_play:  # not on top of board
                 moves.append([square, square + 7, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
         if square%8 != 7:           # not on right of board
             if self.colors[square + 1] != self.to_play:
                 moves.append([square, square + 1, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) != 0 and self.colors[square - 7] != self.to_play:  # not on bottom of board
                 moves.append([square, square - 7, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
             if int(square/8) != 7 and self.colors[square + 9] != self.to_play:  # not on top of board
                 moves.append([square, square + 9, 0, 0])
+                moves[-1][2] = self.pieces[moves[-1][1]]
         
         if int(square/8) != 0 and self.colors[square - 8] != self.to_play:  # not on bottom of board
             moves.append([square, square - 8, 0, 0])
+            moves[-1][2] = self.pieces[moves[-1][1]]
         if int(square/8) != 7 and self.colors[square + 8] != self.to_play:  # not on top of board
             moves.append([square, square + 8, 0, 0])
+            moves[-1][2] = self.pieces[moves[-1][1]]
         
         # check for castling
         if self.meta_info[(self.to_play-1)*2] != 0:     #kingside castling
