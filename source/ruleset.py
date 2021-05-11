@@ -365,7 +365,8 @@ class GeneralBoard():
             
             # can't take to the left is on A file
             if (square%8 != 0 and 
-                    self.pieces[square + 7] != 0):
+                    self.pieces[square + 7] != 0 and 
+                    self.colors[square + 7] != self.to_play):
                 if int(square/8) == 6:          # takes with promotion
                     for i in range(1, 5):
                         moves.append([square, square + 7, self.pieces[square + 7], i])
@@ -374,7 +375,8 @@ class GeneralBoard():
                 
             # can't take to the right if on the H file
             if (square%8 != 7 and 
-                    self.pieces[square + 9] != 0):
+                    self.pieces[square + 9] != 0 and
+                    self.colors[square + 9] != self.to_play):
                 if int(square/8) == 6:          # takes with promotion
                     for i in range(1, 5):
                         moves.append([square, square + 9, self.pieces[square + 9], i])
@@ -408,7 +410,8 @@ class GeneralBoard():
             
             # can't take to the left is on A file
             if (square%8 != 0 and 
-                    self.pieces[square - 9] != 0):
+                    self.pieces[square - 9] != 0 and
+                    self.colors[square - 9] != self.to_play):
                 if int(square/8) == 1:          # takes with promotion
                     for i in range(1, 5):
                         moves.append([square, square - 9, self.pieces[square - 9], i])
@@ -417,7 +420,8 @@ class GeneralBoard():
                 
             # can't take to the right if on the H file
             if (square%8 != 7 and 
-                    self.pieces[square - 7] != 0):
+                    self.pieces[square - 7] != 0 and
+                    self.colors[square - 7] != self.to_play):
                 if int(square/8) == 1:          # takes with promotion
                     for i in range(1, 5):
                         moves.append([square, square - 7, self.pieces[square - 7], i])
