@@ -6,21 +6,15 @@ tests to make:
         pawn move obstructed
         double pawn move obstructed
         pawn captures
-    untested
         capture en passant
-        capture en passant after another move
+        capture en passant after another move (shouldn't be possible)
         castle after rook captured, but king and rook haven't moved
+    untested
         desync of color and piece type (if one board is 0, so should be the other)
 
 """
 
-
-class Game:
-    """
-    representation of the board state, separate from Board to represent PGN more efficiently
-    """
-
-class Board:
+class GeneralBoard():
     '''
     EMPTY:  0
     PAWN:   1
@@ -33,7 +27,6 @@ class Board:
     EMPTY:  0
     WHITE:  1
     BLACK:  2
-    May implement fog of war as 3, it seems useful to implementation most likely
     '''
     def __init__(self):
         self.to_play = 1    # alternate between 1 and 2, refer to self.piece_colors
@@ -71,8 +64,10 @@ class Board:
                                 0, 0, 0, 0, 0, 0, 0, 0,
                                 2, 2, 2, 2, 2, 2, 2, 2,
                                 2, 2, 2, 2, 2, 2, 2, 2])
-    
-    
+                                
+    def swap_side(self):
+        self.to_play = self.to_play%2 + 1
+
     def validate_move(self, squares, promotion = None):
         """
         Used to validate that a move from the user would be legal in the position
@@ -95,42 +90,38 @@ class Board:
                     if i[3] == 1 or i[3] == 2 or i[3] == 3 or i[3] == 4:
                         #give option for promotion
                         if promotion == None:
-                            ret = "promote"
-                            return ret      # need to avoid swapping side
+                            
+                            return "promote"      # need to avoid swapping side
                         else:
                             # if the move has the same promotion value, make it
                             if i[3] == promotion:
-                                ret = self.make_move(i)
+                                ret = i
                     else:
-                        ret = self.make_move(i)
-        
-        if ret != None:
-            # swap the player once a move is made
-            self.to_play = self.to_play%2 + 1
-        
+                        ret = i
         return ret
-        
         
     def make_move(self, move):
         """
             Called by validate_move or by the AI when making a move will make a move with no validation
             
             Arguments:
-                move (int array): validated move in the form of [int, int, int] where the ints are the squares to be moved to/from,
-                                     and the piece to be promoted to if relevant
+                move (int array): validated move in the form of [int, int, int] where the ints are the squares to be moved to/from, 
+                captured piece type (if any), and other move info if relevant this is defined in get_valid_moves
             Returns:
                 modifies the state of the board to fit the given move
         """
         #if the selected square is a king and it is moving over by 2
         ret = None
-        print("make_move start")
-        print(self.meta_info)
+        #print("make_move start")
+        #print(self.meta_info)
         #self.meta_info[4] = -1  #reset en passant tracker, needed info is stored in move[3]
         
+        #remove castling rights for side if they move the king
         if self.pieces[move[0]] == 6:
             self.meta_info[(self.to_play - 1)*2] = 0
             self.meta_info[(self.to_play - 1)*2 + 1] = 0
         
+        #remove castling rights if a rook is moved
         if self.pieces[move[0]] == 2:
             if move[0] == 7:            #castle short white disable
                 self.meta_info[0] = 0
@@ -140,10 +131,19 @@ class Board:
                 self.meta_info[2] = 0
             if move[0] == 56:           #castle long black disable
                 self.meta_info[3] = 0
-                
-
         
-        if move[3] == 0:    # no special work to be done
+        #remove castling rights if a rook is captured
+        if move[2] == 2:    # rook captured
+            if move[1] == 7:            #castle short white disable
+                self.meta_info[0] = 0
+            if move[1] == 0:            #castle long white disable
+                self.meta_info[1] = 0
+            if move[1] == 63:           #castle short black disable
+                self.meta_info[2] = 0
+            if move[1] == 56:           #castle long black disable
+                self.meta_info[3] = 0
+                    
+        if move[3] == 0:    # no special work to be done, just a standard move
             self.pieces[move[1]] = self.pieces[move[0]]
             self.colors[move[1]] = self.to_play
             
@@ -153,7 +153,7 @@ class Board:
             self.meta_info[4] = -1 # reset en passant
 
             
-        elif move[3] < 5:   # promoting a pawn
+        elif move[3] < 5:   # promoting a pawn to piece type: 1,2,3,4 -> R,N,B,Q
             self.pieces[move[1]] = move[3] + 1  # add 1 because the move info is shifted by 1 (no pawn promotion)
             self.colors[move[1]] = self.to_play
             
@@ -162,8 +162,7 @@ class Board:
             ret = move
             self.meta_info[4] = -1 # reset en passant
 
-        elif move[3] == 5:
-            # takes en passant
+        elif move[3] == 5:  # takes en passant, file decided by meta info
             self.pieces[move[1]] = self.pieces[move[0]]
             self.colors[move[1]] = self.to_play
             
@@ -175,18 +174,13 @@ class Board:
                 self.colors[move[1] + 8] = 0
             
             self.pieces[move[0]] = 0
-            self.colors[move[0]] = 0
-
-            
-            #raise NotImplementedError("en passant not implemented")
-            
+            self.colors[move[0]] = 0            
             
             ret = move
             self.meta_info[4] = -1 # reset en passant
 
-        elif move[3] == 6:
-            # makes en passant possible, so add the file the pawn moved on to the en passant meta info
-            print("en passant possible", move[0])            # note that it is possible to take en passant this turn
+        elif move[3] == 6:  #pawn push 2 forwards, add the file the pawn moved on to the en passant meta info
+            #print("en passant possible", move[0])            # note that it is possible to take en passant this turn
 
             self.meta_info[4] = move[0]%8
 
@@ -197,9 +191,7 @@ class Board:
             self.colors[move[0]] = 0
             ret = move
             
-        elif move[3] == 7:
-            # castle short
-            
+        elif move[3] == 7:  # castle short
             #move king and rook
             self.pieces[move[0] + 1] = 2
             self.colors[move[0] + 1] = self.to_play
@@ -215,9 +207,7 @@ class Board:
             ret = move
             self.meta_info[4] = -1 # reset en passant
 
-        elif move[3] == 8:
-            # castle long
-            
+        elif move[3] == 8:  # castle long
             #move king and rook
             self.pieces[move[0] - 1] = 2
             self.colors[move[0] - 1] = self.to_play
@@ -237,7 +227,8 @@ class Board:
             # doesn't catch negative values, and will assume it is a pawn promotion
             raise ValueError("Invalid move information in move[3]")
             ret = move
-            
+        
+        self.swap_side()
         return ret
         
     def get_valid_moves(self):
@@ -474,7 +465,7 @@ class Board:
             if int(square/8) > 1 and self.colors[square - 17] != self.to_play:
                 moves.append([square, square - 17, 0, 0])
                 
-            if square%8 < 6:
+            if square%8 > 1:
                 if int(square/8) < 7 and self.colors[square + 6] != self.to_play:
                     moves.append([square, square + 6, 0, 0])
                 if int(square/8) > 0 and self.colors[square - 10] != self.to_play:
@@ -539,14 +530,12 @@ class Board:
         
         # check for castling
         if self.meta_info[(self.to_play-1)*2] != 0:     #kingside castling
-            if self.pieces[square + 1] == 0 and self.pieces[square + 2] == 0:
+            if self.pieces[square + 1] == 0 and self.pieces[square + 2] == 0:   #check that adjacent 2 squares are empty
                 moves.append([square, square + 2, 0, 7])
         if self.meta_info[(self.to_play-1)*2 + 1] != 0: #queenside castling
-            if self.pieces[square - 1] == 0 and self.pieces[square - 2] == 0:
+            if self.pieces[square - 1] == 0 and self.pieces[square - 2] == 0:   #check that adjacent 2 squares are empty
                 moves.append([square, square - 2, 0, 8])
 
-        
-        #moves.append([0,0,0,0])
         return moves
 
     def _get_diagonal_moves(self, square):
@@ -633,7 +622,6 @@ class Board:
         
         return moves
         
-        
     def __str__(self):
         """
         string representation of the board, uses the standard piece letter notations
@@ -659,9 +647,9 @@ class Board:
             fog (int array): all squares that are in the fog of war
         """
         
-        if side == 0:
+        if side == 0:   #if displaying unobstructed, just return every square as visible
             return [i for i in range(64)]
-        if side == None:
+        if side == None:    #default the side to play to be the current side to play
             side = self.to_play
             
         visible = []
@@ -670,25 +658,45 @@ class Board:
                 visible.append(i[0])
             if not i[1] in visible:
                 visible.append(i[1])
+            if i[3] == 5:   #special case to display pawn that can be captured en passant
+                if side == 1:   # shift visibility down 1 row from capture for white
+                    visible.append(i[1] - 8)
+                if side == 2:   # shift visibility up 1 row from capture for black
+                    visible.append(i[1] + 8)
         for i in range(64):
             if self.pieces[i] != 0 and self.colors[i] == self.to_play and not i in visible:
                 visible.append(i)
 
         return visible
+          
+    def get_board(self, side = None):
+        """
+        gets a full board representation (piece names, colors, and fog locations)
+        can be used for the AI to get a board representation
+        Arguments:
+            side (int): 0 for unobstructed, should be None otherwise, and will default to correct side
+        Returns:
+            board (tuple): (pieces, colors, visible_squares) pieces and colors are the defined board state
+                            visible_squares are the squares that can be seen by the current player
+        """
+        if side == 0:
+            return (self.pieces, self.colors, [i for i in range(0, 64)])
+
+        if side == None:
+            side == self.to_play
         
-        
-    def get_board(self, side):
-        pass
-    
+        visible_squares = self.get_visible_squares()
+        return (self.colors, self.pieces, visible_squares)
     
     def get_graphics_board(self):
+        """
+        get the board to be displayed for the renderer function
+        """
         ret = []
         for i in range(64):
             if self.pieces[i] != 0:
                 ret.append(["", i])
                 
-                # currently the color return is being swapped because of a mismatch between
-                # the board state arrays and the board display
                 ret[-1][0] += self.piece_colors[self.colors[i]] # get 'b' or 'w'
                 ret[-1][0] += self.piece_names[self.pieces[i]]  # get letter for piece
         return ret
