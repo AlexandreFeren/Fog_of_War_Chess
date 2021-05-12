@@ -110,12 +110,7 @@ class GeneralBoard():
             Returns:
                 modifies the state of the board to fit the given move
         """
-        #if the selected square is a king and it is moving over by 2
         ret = None
-        #print("make_move start")
-        #print(self.meta_info)
-        #self.meta_info[4] = -1  #reset en passant tracker, needed info is stored in move[3]
-        
         #remove castling rights for side if they move the king
         if self.pieces[move[0]] == 6:
             self.meta_info[(self.to_play - 1)*2] = 0
@@ -231,6 +226,108 @@ class GeneralBoard():
         self.swap_side()
         return ret
         
+    def unmake_move(self, move):
+        """
+        for the search function so it can just use the base board for searching
+        also modifies the to_play variable as it searches
+        search will likely need to handle the metadata changes since
+        the current move cannot determine if en passant was possible the previous move.
+        
+        Arguments:
+            move (int array): validated move in the form of [int, int, int] where the ints are the squares to be moved to/from, 
+            captured piece type (if any), and other move info if relevant this is defined in get_valid_moves
+        Returns:
+            modifies the state of the board to fit the given move
+        """     
+        
+        self.swap_side() # change the side back a move
+        self.meta_info = move[4]
+        
+        #captures
+        if move[2] != 0 and move[3] != 5:
+            print("capture")
+            # move piece back to original location
+            self.pieces[move[0]] = self.pieces[move[1]]
+            self.colors[move[0]] = self.to_play
+            
+            # replace captured piece
+            self.pieces[move[1]] = move[2]
+            self.colors[move[1]] = self.to_play%2 + 1
+        
+        #castling
+        if move[3] == 7: # castle short
+            print("castling short")
+            
+            #clear king and rook
+            self.pieces[move[0] + 1] = 0
+            self.colors[move[0] + 1] = 0
+            self.pieces[move[0] + 2] = 0
+            self.colors[move[0] + 2] = 0
+            
+            #reset king and rook
+            self.pieces[move[0]] = 6
+            self.colors[move[0]] = self.to_play
+            self.pieces[move[0] + 3] = 2
+            self.colors[move[0] + 3] = self.to_play
+
+        if move[3] == 8: # castle long
+            print("castling long")
+            
+            #clear king and rook
+            self.pieces[move[0] - 1] = 0
+            self.colors[move[0] - 1] = 0
+            self.pieces[move[0] - 2] = 0
+            self.colors[move[0] - 2] = 0
+            
+            #clear where king and rook were
+            self.pieces[move[0]] = 6
+            self.colors[move[0]] = self.to_play
+            self.pieces[move[0] - 4] = 2
+            self.colors[move[0] - 4] = self.to_play
+            
+            
+        #en passant
+        if move[3] == 5:
+            print("en passant")
+            self.pieces[move[0]] = self.pieces[move[1]]
+            self.colors[move[0]] = self.to_play
+            
+            self.pieces[move[1]] = 0
+            self.colors[move[1]] = 0
+            if self.to_play == 1:
+                self.pieces[move[1] - 8] = move[2]
+                self.colors[move[1] - 8] = self.to_play%2 + 1
+            else:
+                self.pieces[move[1] + 8] = move[2]
+                self.colors[move[1] + 8] = self.to_play%2 + 1
+        
+        #double pawn move?
+        
+            
+        #promotion
+        if move[3] in [1, 2, 3, 4]: #if promoting
+            print("promotion")
+            if move[2] == 0:    # if no capture, captures already handled
+                self.pieces[move[1]] = 0
+                self.colors[move[1]] = 0
+            
+            self.pieces[move[0]] = 1
+            self.colors[move[0]] = self.to_play
+        
+        #no other info
+        if move[2] == 0 and move[3] == 0 or move[3] == 6:
+            print("standard move")
+            #print(move)
+            self.pieces[move[0]] = self.pieces[move[1]]
+            self.colors[move[0]] = self.colors[move[1]]
+            
+            self.pieces[move[1]] = 0
+            self.colors[move[1]] = 0
+            
+            print(self)
+        
+        pass
+        
     def get_valid_moves(self):
         """
         Arguments:
@@ -269,7 +366,8 @@ class GeneralBoard():
                     if len(move) != 4:
                         print("Bad move input:", move)
                     moves.append(move)
-                    
+        for move in moves:
+            move.append(self.meta_info)
         return moves
     
     def to_algebraic_notation(self, moves = None, move = None):
@@ -284,7 +382,7 @@ class GeneralBoard():
         
         algebraic = []
         for i in moves:
-            if len(i) != 4:
+            if len(i) != 5:
                 raise ValueError("Invalid move format: ", i)
             algebraic.append(self._to_algebraic_notation(i))    
         
@@ -429,7 +527,6 @@ class GeneralBoard():
                     moves.append([square, square - 7, self.pieces[square - 7], 0])
 
         return moves
-        #raise NotImplementedError("pawn moves not implemented yet")
     
     def get_rook_moves(self, square):
         """
@@ -440,7 +537,6 @@ class GeneralBoard():
         """
         moves = self._get_horizontal_moves(square)
         return moves
-        #raise NotImplementedError("rook moves not implemented yet")
         
     def get_knight_moves(self, square):
         """
@@ -483,7 +579,6 @@ class GeneralBoard():
             
 
         return moves
-        #raise NotImplementedError("knight moves not implemented yet")
     
     def get_bishop_moves(self, square):
         """
@@ -494,7 +589,6 @@ class GeneralBoard():
         """
         moves = self._get_diagonal_moves(square)
         return moves
-        #raise NotImplementedError("bishop moves not implemented yet")
         
     def get_queen_moves(self, square):
         """
@@ -508,7 +602,6 @@ class GeneralBoard():
         for i in self._get_diagonal_moves(square):
             moves.append(i)
         return moves
-        #raise NotImplementedError("queen moves not implemented yet")
         
     def get_king_moves(self, square):
         """

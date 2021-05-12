@@ -53,10 +53,6 @@ class AIBoard(ruleset.GeneralBoard):
     def search():
         """
         search for good moves based on the evaluation function
+        should randomly choose between good options if there are similar values
         """
         pass
-    '''
-    def move(self):
-        print("making move")
-        return self.make_move(self.get_valid_moves()[0])
-    '''

@@ -104,6 +104,23 @@ def AI_move():
     board.make_move(move)
     AI_board.evaluate()
     
+def test_unmake():
+
+    test = input("test unmake?")
+    if test == "y":
+        for move in board.get_valid_moves():
+            board.make_move(move)
+            renderer.update_board(win, board.get_graphics_board(), [i for i in range(64)])
+            input("move made")
+            board.unmake_move(move)
+            renderer.update_board(win, board.get_graphics_board(), [i for i in range(64)])
+            input()
+    #get and make a move for player
+    move = get_move_input(0)
+    board.make_move(move)
+    
+    
+
 board = game.Board()
 AI_board = Cheating_AI.AIBoard()
 sides = ["", "white", "black"]
@@ -111,7 +128,7 @@ sides = ["", "white", "black"]
 win = renderer.draw_board(board.get_graphics_board())
 moves = board.get_valid_moves()
 
-won = -1
+won = None
 ply = 0
 
 while 1:
@@ -122,7 +139,8 @@ while 1:
     print("fog:",  x[2])
     '''
     
-    won = play_as_black()
+    #won = play_as_black()
+    test_unmake()
     if won != None:
         print(sides[won], "Won the game")
         break

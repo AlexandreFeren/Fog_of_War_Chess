@@ -49,8 +49,9 @@ def draw_board(board):
     win.setBackground('beige')
     
     # render the squares and pieces
-    draw_grid(win, [i for i in range(16,64)])
-    draw_pieces(win, board, [i for i in range(16,64)])
+    # default to no squares visible
+    draw_grid(win, [])
+    draw_pieces(win, board, [])
     return win
     
 def update_board(win, board, fog):
