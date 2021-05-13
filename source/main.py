@@ -3,6 +3,8 @@ import AI
 import Cheating_AI
 import renderer
 import random
+import chess
+import chess.engine
 
 def play_as_white(render_mode = 1):
     """
@@ -80,6 +82,7 @@ def get_move_input(render_mode = None):
     return move_made
 
 def human_move(render_mode = None):
+    print(board.export_fen())
     if render_mode == None:
         render_mode = board.to_play
     move = get_move_input(render_mode)
@@ -93,8 +96,25 @@ def human_move(render_mode = None):
     #print(move)
     
 def AI_move():
+    """
     #get move from AI
-    move = random.choice(board.get_valid_moves())
+    board.export_fen()
+    """
+    #move = random.choice(board.get_valid_moves())
+    print(board.export_fen())
+    chess_board = chess.Board(board.export_fen())
+    print(chess.Board())
+    print(chess_board)
+    try:
+        move = board.move_from_san(engine.analyse(chess_board, chess.engine.Limit(time=.1))["pv"][0])
+    except:
+        # while this block can definitely be reached on not moving the king out of danger,
+        # there may be other, unintended ways to get here that I do not fully understand
+        print("stupid move")
+        return board.to_play
+    
+    
+    #move = AI_board.search()[0]
     if move[2] == 6:
         print("King captured")
         return board.to_play
@@ -103,6 +123,8 @@ def AI_move():
     AI_board.make_move(move)
     board.make_move(move)
     AI_board.evaluate()
+
+    
     
 def test_unmake():
 
@@ -119,9 +141,12 @@ def test_unmake():
     move = get_move_input(0)
     board.make_move(move)
     
-    
 
 board = game.Board()
+engine = chess.engine.SimpleEngine.popen_uci("/usr/local/bin/stockfish")
+chess_board = chess.Board()
+
+
 AI_board = Cheating_AI.AIBoard()
 sides = ["", "white", "black"]
 
@@ -132,15 +157,9 @@ won = None
 ply = 0
 
 while 1:
-    '''
-    x = board.get_board()
-    print("colors:",  x[0])
-    print("pieces:",  x[1])
-    print("fog:",  x[2])
-    '''
     
-    #won = play_as_black()
-    test_unmake()
+    won = play_as_black(0)
+    #won = play_human(0)
     if won != None:
         print(sides[won], "Won the game")
         break

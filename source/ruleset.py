@@ -31,7 +31,7 @@ class GeneralBoard():
     def __init__(self):
         self.to_play = 1    # alternate between 1 and 2, refer to self.piece_colors
         self.piece_colors = [" ", "w", "b"]
-        self.piece_names = [" ", "P", "R", "N", "B", "Q", "K"]
+        self.piece_names = [".", "P", "R", "N", "B", "Q", "K"]
         
         #dictionary mapping piece names to functions for move generation
         self.piece_move_functions = {1: self.get_pawn_moves, 2: self.get_rook_moves, 3: self.get_knight_moves, 
@@ -245,7 +245,6 @@ class GeneralBoard():
         
         #captures
         if move[2] != 0 and move[3] != 5:
-            print("capture")
             # move piece back to original location
             self.pieces[move[0]] = self.pieces[move[1]]
             self.colors[move[0]] = self.to_play
@@ -256,7 +255,6 @@ class GeneralBoard():
         
         #castling
         if move[3] == 7: # castle short
-            print("castling short")
             
             #clear king and rook
             self.pieces[move[0] + 1] = 0
@@ -271,7 +269,6 @@ class GeneralBoard():
             self.colors[move[0] + 3] = self.to_play
 
         if move[3] == 8: # castle long
-            print("castling long")
             
             #clear king and rook
             self.pieces[move[0] - 1] = 0
@@ -288,7 +285,6 @@ class GeneralBoard():
             
         #en passant
         if move[3] == 5:
-            print("en passant")
             self.pieces[move[0]] = self.pieces[move[1]]
             self.colors[move[0]] = self.to_play
             
@@ -299,14 +295,10 @@ class GeneralBoard():
                 self.colors[move[1] - 8] = self.to_play%2 + 1
             else:
                 self.pieces[move[1] + 8] = move[2]
-                self.colors[move[1] + 8] = self.to_play%2 + 1
-        
-        #double pawn move?
-        
+                self.colors[move[1] + 8] = self.to_play%2 + 1        
             
         #promotion
         if move[3] in [1, 2, 3, 4]: #if promoting
-            print("promotion")
             if move[2] == 0:    # if no capture, captures already handled
                 self.pieces[move[1]] = 0
                 self.colors[move[1]] = 0
@@ -316,7 +308,6 @@ class GeneralBoard():
         
         #no other info
         if move[2] == 0 and move[3] == 0 or move[3] == 6:
-            print("standard move")
             #print(move)
             self.pieces[move[0]] = self.pieces[move[1]]
             self.colors[move[0]] = self.colors[move[1]]
@@ -324,7 +315,6 @@ class GeneralBoard():
             self.pieces[move[1]] = 0
             self.colors[move[1]] = 0
             
-            print(self)
         
         pass
         
@@ -747,7 +737,6 @@ class GeneralBoard():
                 ret += "\n"
         ret = ret.split("\n")
         ret = ret[::-1]
-        print(ret)
         temp = ""
         for i in ret:
             temp += i + "\n"
@@ -819,7 +808,78 @@ class GeneralBoard():
         return ret
         
     def export_fen(self):
-        pass
-    
+        ret = ""
+        count = 0
+        for i in range(64):
+            if self.pieces[i] != 0:
+                if count != 0:
+                    ret += str(count)
+                    count = 0
+                if self.colors[i] == 1:
+                    ret += self.piece_names[self.pieces[i]]
+                else:
+                    ret += self.piece_names[self.pieces[i]].lower()
+            else:
+                count += 1
+            if i%8 == 7:
+                if count != 0:
+                    ret += str(count)
+                ret += "/"
+                count = 0
+        ret = ret.split("/")
+        temp = ""
+        for i in ret[::-1][1:]:
+            temp += i + "/"
+        
+        
+        ret = temp
+        
+        ret = ret[:-1] + " "
+        ret += self.piece_colors[self.to_play] + " "
+        
+        castling = ""
+        if self.meta_info[0] == 1:
+            castling += "K"
+        if self.meta_info[1] == 1:
+            castling += "Q"
+        if self.meta_info[2] == 1:
+            castling += "k"
+        if self.meta_info[3] == 1:
+            castling += "q"
+        
+        if castling != "":
+            ret += castling + " "
+        else:
+            ret += "- "
+            
+        if self.meta_info[4] != -1:
+            ret += chr(ord("a") + self.meta_info[4])
+            if self.to_play == 1:
+                ret += "6 "
+            else:
+                ret += "3 "
+            
+        else:
+            ret += "- "
+            
+        ret += "2 4"
+        return ret
+
     def export_pgn(self):
         pass
+        
+    def move_from_san(self, move):
+        move = str(move)
+        print("MOVE:" + move)
+        
+        square1 = ord(move[0]) - ord("a") + 8*(int(move[1]) - 1)
+        square2 = ord(move[2]) - ord("a") + 8*(int(move[3]) - 1)
+        
+        moves = self.get_valid_moves()
+        print(square1, square2)
+        for i in moves:
+            if i[0] == square1 and i[1] == square2:
+                return i
+        return -1
+        
+        
