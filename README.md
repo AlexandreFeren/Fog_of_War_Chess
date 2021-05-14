@@ -15,7 +15,7 @@ This is my project for COS470: Introduction to Artificial Intelligence. The goal
 ### The Game
 #### Rules and Introduction
 ##### Piece Movement
-Pieces have the same base movement as in regulat chess, including castling and en passant. Kings are no longer restricted in movement at any time, and may move into check, and in the case of castling they may also move through or into check. (taking the ruleset from what is exhibited on Chess.com, only difference being that pawns that can be captured en passant will be displayed explicitly) 
+Pieces have the same base movement as in regular chess, including castling and en passant. Kings are no longer restricted in movement at any time, and may move into check, and in the case of castling they may also move through or into check. (taking the ruleset from what is exhibited on Chess.com, only difference being that pawns that can be captured en passant will be displayed explicitly) 
 
 ##### Win Conditions
 the game may be won on 3 conditions:
